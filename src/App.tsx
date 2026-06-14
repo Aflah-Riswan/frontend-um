@@ -3,39 +3,64 @@ import "./App.css";
 import { RegisterForm } from "./features/auth/components/RegisterForm";
 import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { LoginForm } from "./features/auth/components/LoginForm";
-import { ProtectedRoute, PublicRoute } from "./routes/RouteGuard";
+import { AdminRoute, ProtectedRoute, PublicRoute } from "./routes/RouteGuard";
+
+const AdminDashboard = () => {
+  const admin = JSON.parse(localStorage.getItem("user") || "{}");
+  return (
+    <>
+      <div
+        style={{
+          textAlign: "center",
+          border: "2px solid #ef4444",
+          padding: "2rem",
+          borderRadius: "8px",
+        }}
+      >
+        <h1>👑 Admin Control Center</h1>
+        <p>Secure system clearance verified for Admin: {admin.name}</p>
+      </div>
+    </>
+  );
+};
+
+const DashboardPlaceHolder = () => {
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user") || "{}")
+    const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
+  return (
+    <div
+      style={{
+        padding: "2rem",
+        textAlign: "center",
+        fontFamily: "sans-serif",
+      }}
+    >
+      <h1>🎉 Welcome, {user.name || "User"}!</h1>
+      <p>
+        You have successfully logged into your profile dashboard container
+        layer.
+      </p>
+      <button onClick={handleLogout} style={styles.logoutButton}>
+        Log Out
+      </button>
+    </div>
+  );
+};
 
 function App() {
   const navigate = useNavigate();
-
-  const DashboardPlaceHolder = () => {
+  const handleLoginSuccess = () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-    const handleLogout = () => {
-      localStorage.clear();
-      navigate("/login");
-    };
-
-    return (
-      <div
-        style={{
-          padding: "2rem",
-          textAlign: "center",
-          fontFamily: "sans-serif",
-        }}
-      >
-        <h1>🎉 Welcome, {user.name || "User"}!</h1>
-        <p>
-          You have successfully logged into your profile dashboard container
-          layer.
-        </p>
-        <button onClick={handleLogout} style={styles.logoutButton}>
-          Log Out
-        </button>
-      </div>
-    );
+    if (user.role === "admin") {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/dashboard");
+    }
   };
-
   return (
     <div
       style={{
@@ -52,6 +77,10 @@ function App() {
         <Link to="/register" style={styles.navLink}>
           Create Account
         </Link>
+        <button onClick={()=>{
+          localStorage.clear()
+          navigate('/login')
+        }}>Logout</button>
       </nav>
 
       {/* Viewport Routing Containers */}
@@ -61,11 +90,14 @@ function App() {
             <Route path="/register" element={<RegisterForm />} />
             <Route
               path="/login"
-              element={<LoginForm onSuccess={() => navigate("/dashboard")} />}
+              element={<LoginForm onSuccess={() => handleLoginSuccess()} />}
             />
           </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPlaceHolder />} />
+          </Route>
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
           </Route>
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
